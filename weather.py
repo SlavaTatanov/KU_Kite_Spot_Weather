@@ -1,5 +1,6 @@
 import json
 import requests
+from datetime import date
 
 
 class Spots:
@@ -28,4 +29,72 @@ class Spots:
     def del_spot(self, spot_name):
         del self.spots[spot_name]
 
+
+class Weather:
+    def __init__(self, coord, spot_name):
+        self.coord = coord
+        self.spot_name = spot_name
+
+    def weather(self):
+        cur_date = date.today()
+        req = f"https://api.open-meteo.com/v1/forecast?{self.coord}&hourly=temperature_2m,windspeed_10m," \
+            f"windgusts_10m,winddirection_10m&windspeed_unit=ms&timezone=auto&start_date={cur_date}&end_date={cur_date}" \
+            f"&current_weather=true"
+        answer = requests.get(req)
+        answer = json.loads(answer.text)
+        answer = f"Погода {self.spot_name}\n" \
+                 f"{cur_date}" \
+                 f"\n\n" \
+                 f"Сейчас:\n" \
+                 f"Температура: {answer['current_weather']['temperature']}°C\n" \
+                 f"Ветер: {Wind(answer['current_weather']['windspeed'], answer['current_weather']['winddirection'])}" \
+                 f"\n\n" \
+                 f"10:00\n" \
+                 f"Температура: {answer['hourly']['temperature_2m'][10]}°C\n" \
+                 f"Ветер: {Wind(answer['hourly']['windspeed_10m'][10], answer['hourly']['winddirection_10m'][10], answer['hourly']['windgusts_10m'][10])}" \
+                 f"\n\n" \
+                 f"12:00\n" \
+                 f"Температура: {answer['hourly']['temperature_2m'][12]}°C\n" \
+                 f"Ветер: {Wind(answer['hourly']['windspeed_10m'][12], answer['hourly']['winddirection_10m'][12], answer['hourly']['windgusts_10m'][12])}" \
+                 f"\n\n" \
+                 f"14:00\n" \
+                 f"Температура: {answer['hourly']['temperature_2m'][14]}°C\n" \
+                 f"Ветер: {Wind(answer['hourly']['windspeed_10m'][14], answer['hourly']['winddirection_10m'][14], answer['hourly']['windgusts_10m'][14])}" \
+                 f"\n\n" \
+                 f"16:00\n" \
+                 f"Температура: {answer['hourly']['temperature_2m'][16]}°C\n" \
+                 f"Ветер: {Wind(answer['hourly']['windspeed_10m'][16], answer['hourly']['winddirection_10m'][16], answer['hourly']['windgusts_10m'][16])}"
+        return answer
+
+
+class Wind:
+    def __init__(self, speed, direction, gusts=None):
+        self.speed = str(float(round(speed, 1)))
+        self.direction = self.direction_str(direction)
+        self.gusts = gusts
+
+    def __str__(self):
+        if self.gusts:
+            return f"{self.speed} м/с (до {self.gusts} м/с) {self.direction}"
+        else:
+            return f"{self.speed} м/с {self.direction}"
+
+    @staticmethod
+    def direction_str(direction):
+        if 22.5 < direction <= 67.5:
+            return "СВ ↙"
+        elif 67.5 < direction <= 112.5:
+            return "В ←"
+        elif 112.5 < direction <= 157.5:
+            return "ЮВ ↖"
+        elif 157.5 < direction <= 202.5:
+            return "Ю ↑"
+        elif 202.5 < direction <= 247.5:
+            return "ЮЗ ↗"
+        elif 247.5 < direction <= 292.5:
+            return "З →"
+        elif 292.5 < direction <= 337.5:
+            return "СЗ ↘"
+        else:
+            return "С ↓"
 

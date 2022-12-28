@@ -1,7 +1,7 @@
 from telebot import TeleBot
 import telebot.types
 import os
-from weather import Spots
+from weather import Spots, Weather
 from keyboards import spot_list_keyboard
 
 bot = TeleBot(os.getenv("TOKEN"))
@@ -23,8 +23,16 @@ def weather_init(message):
 
 
 def weather_info(message):
+    if message.location:
+        coord = f"latitude={message.location.latitude}&longitude={message.location.longitude}"
+        name = "в указанном месте"
+    else:
+        coord = spots.spot_coord(message.text)
+        name = message.text
+    answer = Weather(coord, name)
+    answer = answer.weather()
     bot.send_message(message.chat.id,
-                     "Погода",
+                     f"{answer}",
                      reply_markup=telebot.types.ReplyKeyboardRemove())
 
 
