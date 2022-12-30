@@ -16,6 +16,16 @@ bot.set_my_commands([telebot.types.BotCommand("/weather", "Текущая пог
 spots = Spots("spots.json")
 
 
+def cancel_option(func):
+    """Определения декоратора для очистки ожидающих функций"""
+    def wrapped(message, *args):
+        if message.text == "Отмена":
+            bot.clear_step_handler(message)
+            return
+        return func(message, *args)
+    return wrapped
+
+
 @bot.message_handler(commands=["weather"])
 def weather_init(message):
     """
@@ -23,7 +33,7 @@ def weather_init(message):
     или отправить свою текущую гео-позицию
     """
     bot.send_message(message.chat.id,
-                     "Выберете из место из списка или отправите геопозицию",
+                     "Выберете из место из списка или отправите гео-позицию",
                      reply_markup=spot_list_keyboard(spots.all_spots_names()))
     bot.register_next_step_handler(message, weather_info)
 
@@ -57,6 +67,7 @@ def add_spot_init(message):
     bot.register_next_step_handler(message, add_spot_name)
 
 
+@cancel_option
 def add_spot_name(message):
     """
     Принимает от пользователя название места и просит ввести координаты
@@ -68,6 +79,7 @@ def add_spot_name(message):
     bot.register_next_step_handler(message, add_spot_coord, spot_name)
 
 
+@cancel_option
 def add_spot_coord(message, spot_name):
     """
     Проверяет верность ввода координат (пока это далеко не идеальный вариант, просто длина)
