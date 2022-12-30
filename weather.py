@@ -4,16 +4,29 @@ from datetime import date
 
 
 class Spots:
+    """
+    Объект Spots хранит в себе список мест
+    """
     def __init__(self, json_file):
+        """
+        Принимает имя файла, открывает его и читает оттуда словарь с именами и координатами
+        имеет два атрибута - имя файла и сохраненный словарь
+        """
         self.json_file = json_file
         with open(self.json_file, "r", encoding="utf-8") as file:
             data = json.loads(file.read())
         self.spots = data
 
     def all_spots_names(self):
+        """
+        Возвращает список мест, берет ключи из словаря (имена мест)
+        """
         return [spot for spot in self.spots]
 
     def spot_coord(self, spot):
+        """
+        Принимает имя места, и если оно есть в списке self.spots возвращает его координаты
+        """
         if spot in self.spots:
             return self.spots[spot]
 
@@ -37,11 +50,7 @@ class Weather:
 
     def weather(self):
         cur_date = date.today()
-        req = f"https://api.open-meteo.com/v1/forecast?{self.coord}&hourly=temperature_2m,windspeed_10m," \
-            f"windgusts_10m,winddirection_10m&windspeed_unit=ms&timezone=auto&start_date={cur_date}&end_date={cur_date}" \
-            f"&current_weather=true"
-        answer = requests.get(req)
-        answer = json.loads(answer.text)
+        answer = self.request_for_api(cur_date)
         answer = f"Погода {self.spot_name}\n" \
                  f"{cur_date}" \
                  f"\n\n" \
@@ -66,6 +75,14 @@ class Weather:
                  f"Ветер: {Wind(answer['hourly']['windspeed_10m'][16], answer['hourly']['winddirection_10m'][16], answer['hourly']['windgusts_10m'][16])}"
         return answer
 
+    def request_for_api(self, cur_date):
+        req = f"https://api.open-meteo.com/v1/forecast?{self.coord}&hourly=temperature_2m,windspeed_10m," \
+              f"windgusts_10m,winddirection_10m&windspeed_unit=ms&timezone=auto&start_date={cur_date}&end_date={cur_date}" \
+              f"&current_weather=true"
+        answer = requests.get(req)
+        answer = json.loads(answer.text)
+        return answer
+
 
 class Wind:
     def __init__(self, speed, direction, gusts=None):
@@ -82,19 +99,19 @@ class Wind:
     @staticmethod
     def direction_str(direction):
         if 22.5 < direction <= 67.5:
-            return "СВ ↙"
+            return "СВ ⇙"
         elif 67.5 < direction <= 112.5:
-            return "В ←"
+            return "В ⇐"
         elif 112.5 < direction <= 157.5:
-            return "ЮВ ↖"
+            return "ЮВ ⇖"
         elif 157.5 < direction <= 202.5:
-            return "Ю ↑"
+            return "Ю ⇑"
         elif 202.5 < direction <= 247.5:
-            return "ЮЗ ↗"
+            return "ЮЗ ⇗"
         elif 247.5 < direction <= 292.5:
-            return "З →"
+            return "З ⇒"
         elif 292.5 < direction <= 337.5:
-            return "СЗ ↘"
+            return "СЗ ⇘"
         else:
-            return "С ↓"
+            return "С ⇓"
 
