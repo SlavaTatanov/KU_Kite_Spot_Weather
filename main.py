@@ -26,7 +26,7 @@ def cancel_option(func):
     return wrapped
 
 
-@bot.message_handler(commands=["weather"])
+@bot.message_handler(commands=["weather", "5_day_weather"])
 def weather_init(message):
     """
     При вызове команды weather пользователю предлагается выбрать место из списка
@@ -35,13 +35,15 @@ def weather_init(message):
     bot.send_message(message.chat.id,
                      "Выберете из место из списка или отправите гео-позицию",
                      reply_markup=spot_list_keyboard(spots.all_spots_names()))
-    bot.register_next_step_handler(message, weather_info)
+    weather_type = message.text
+    bot.register_next_step_handler(message, weather_info, weather_type)
 
 
-def weather_info(message):
+def weather_info(message, weather_type):
     """
     Данная функция запрашивает погоду на текущий день и отправляет пользователю сформированное сообщение
     """
+    print(weather_type)
     if message.location:
         coord = f"latitude={message.location.latitude}&longitude={message.location.longitude}"
         name = "в указанном месте"
@@ -49,7 +51,10 @@ def weather_info(message):
         coord = spots.spot_coord(message.text)
         name = message.text
     answer = Weather(coord, name)
-    answer = answer.weather()
+    if weather_type == "/weather":
+        answer = answer.weather()
+    elif weather_type == "/5_day_weather":
+        answer = answer.five_day_weather()
     bot.send_message(message.chat.id,
                      f"{answer}",
                      reply_markup=telebot.types.ReplyKeyboardRemove())

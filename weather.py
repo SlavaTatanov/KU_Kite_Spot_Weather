@@ -1,6 +1,6 @@
 import json
 import requests
-from datetime import date
+from datetime import date, timedelta
 
 
 class Spots:
@@ -45,43 +45,91 @@ class Spots:
 
 class Weather:
     def __init__(self, coord, spot_name):
-        self.coord = coord
-        self.spot_name = spot_name
+        self.__coord = coord
+        self.__spot_name = spot_name
+        self.__cur_date = date.today()
 
     def weather(self):
-        cur_date = date.today()
-        answer = self.request_for_api(cur_date)
-        answer = f"Погода {self.spot_name}\n" \
-                 f"{cur_date}" \
+        req = self.__request_for_api(self.__cur_date, self.__cur_date)
+        answer = f"Погода {self.__spot_name}\n" \
+                 f"{self.__cur_date}" \
                  f"\n\n" \
                  f"Сейчас:\n" \
-                 f"Температура: {answer['current_weather']['temperature']}°C\n" \
-                 f"Ветер: {Wind(answer['current_weather']['windspeed'], answer['current_weather']['winddirection'])}" \
+                 f"Температура: {req['current_weather']['temperature']}°C\n" \
+                 f"Ветер: {Wind(req['current_weather']['windspeed'], req['current_weather']['winddirection'])}" \
                  f"\n\n" \
                  f"10:00\n" \
-                 f"Температура: {answer['hourly']['temperature_2m'][10]}°C\n" \
-                 f"Ветер: {Wind(answer['hourly']['windspeed_10m'][10], answer['hourly']['winddirection_10m'][10], answer['hourly']['windgusts_10m'][10])}" \
+                 f"Температура: {req['hourly']['temperature_2m'][10]}°C\n" \
+                 f"Ветер: {Wind(req['hourly']['windspeed_10m'][10], req['hourly']['winddirection_10m'][10], req['hourly']['windgusts_10m'][10])}" \
                  f"\n\n" \
                  f"12:00\n" \
-                 f"Температура: {answer['hourly']['temperature_2m'][12]}°C\n" \
-                 f"Ветер: {Wind(answer['hourly']['windspeed_10m'][12], answer['hourly']['winddirection_10m'][12], answer['hourly']['windgusts_10m'][12])}" \
+                 f"Температура: {req['hourly']['temperature_2m'][12]}°C\n" \
+                 f"Ветер: {Wind(req['hourly']['windspeed_10m'][12], req['hourly']['winddirection_10m'][12], req['hourly']['windgusts_10m'][12])}" \
                  f"\n\n" \
                  f"14:00\n" \
-                 f"Температура: {answer['hourly']['temperature_2m'][14]}°C\n" \
-                 f"Ветер: {Wind(answer['hourly']['windspeed_10m'][14], answer['hourly']['winddirection_10m'][14], answer['hourly']['windgusts_10m'][14])}" \
+                 f"Температура: {req['hourly']['temperature_2m'][14]}°C\n" \
+                 f"Ветер: {Wind(req['hourly']['windspeed_10m'][14], req['hourly']['winddirection_10m'][14], req['hourly']['windgusts_10m'][14])}" \
                  f"\n\n" \
                  f"16:00\n" \
-                 f"Температура: {answer['hourly']['temperature_2m'][16]}°C\n" \
-                 f"Ветер: {Wind(answer['hourly']['windspeed_10m'][16], answer['hourly']['winddirection_10m'][16], answer['hourly']['windgusts_10m'][16])}"
+                 f"Температура: {req['hourly']['temperature_2m'][16]}°C\n" \
+                 f"Ветер: {Wind(req['hourly']['windspeed_10m'][16], req['hourly']['winddirection_10m'][16], req['hourly']['windgusts_10m'][16])}"
         return answer
 
-    def request_for_api(self, cur_date):
-        req = f"https://api.open-meteo.com/v1/forecast?{self.coord}&hourly=temperature_2m,windspeed_10m," \
-              f"windgusts_10m,winddirection_10m&windspeed_unit=ms&timezone=auto&start_date={cur_date}&end_date={cur_date}" \
+    def five_day_weather(self):
+        start_date = self.__cur_date + timedelta(days=1)
+        req = self.__request_for_api(start_date, self.__cur_date + timedelta(days=6))
+        answer = f"Погода на 5 дней {self.__spot_name}\n\n" \
+                 f"{start_date}\n\n" \
+                 f"{self._hour_block(1, 11, req)}\n" \
+                 f"{self._hour_block(1, 15, req)}\n\n" \
+                 f"{start_date + timedelta(days=1)}\n\n" \
+                 f"{self._hour_block(2, 11, req)}\n" \
+                 f"{self._hour_block(2, 15, req)}\n\n" \
+                 f"{start_date + timedelta(days=2)}\n\n" \
+                 f"{self._hour_block(3, 11, req)}\n" \
+                 f"{self._hour_block(3, 15, req)}\n\n" \
+                 f"{start_date + timedelta(days=3)}\n\n" \
+                 f"{self._hour_block(4, 11, req)}\n" \
+                 f"{self._hour_block(4, 15, req)}\n\n" \
+                 f"{start_date + timedelta(days=4)}\n\n" \
+                 f"{self._hour_block(5, 11, req)}\n" \
+                 f"{self._hour_block(5, 15, req)}"
+        return answer
+
+    def __request_for_api(self, start_date, stop_date):
+        req = f"https://api.open-meteo.com/v1/forecast?{self.__coord}&hourly=temperature_2m,windspeed_10m," \
+              f"windgusts_10m,winddirection_10m&windspeed_unit=ms" \
+              f"&timezone=auto&start_date={start_date}&end_date={stop_date}" \
               f"&current_weather=true"
         answer = requests.get(req)
         answer = json.loads(answer.text)
         return answer
+
+    def __wind_request_for_hour(self, day, hour, req):
+        index = self.__get_index(day, hour)
+        return Wind(req['hourly']['windspeed_10m'][index],
+                    req['hourly']['winddirection_10m'][index],
+                    req['hourly']['windgusts_10m'][index])
+
+    def _hour_block(self, day, hour, req):
+        return f"{hour}:00\n" \
+                 f"Температура: {req['hourly']['temperature_2m'][self.__get_index(day, hour)]}°C\n" \
+                 f"Ветер: {self.__wind_request_for_hour(day, hour, req)}\n" \
+
+
+    @staticmethod
+    def __get_index(day, hour):
+        """
+        Функция возвращает индекс, соответствующий указанному дню и часу.
+
+        Аргументы:
+        day (int): номер дня
+        hour (int): номер часа (от 0 до 23)
+
+        Возвращает:
+        int: индекс
+        """
+        return (day - 1) * 24 + hour
 
 
 class Wind:
