@@ -76,6 +76,12 @@ class Weather:
         return answer
 
     def five_day_weather(self):
+        """
+        Функция для получения погоды на 5 дней
+
+        Возвращает:
+        str: Прогноз погоды на 5 дней
+        """
         start_date = self.__cur_date + timedelta(days=1)
         req = self.__request_for_api(start_date, self.__cur_date + timedelta(days=6))
         answer = f"Погода на 5 дней {self.__spot_name}\n\n" \
@@ -95,6 +101,28 @@ class Weather:
                  f"{self._hour_block(5, 11, req)}\n" \
                  f"{self._hour_block(5, 15, req)}"
         return answer
+
+    def weekend_weather(self):
+        weekend = self.__weekend_days()
+        req = self.__request_for_api(weekend[0], weekend[1])
+        answer = f"Погода на выходные {self.__spot_name}\n\n" \
+                 f"{weekend[0]}\n" \
+                 f"{self._hour_block(1, 10, req)}\n" \
+                 f"{self._hour_block(1, 12, req)}\n" \
+                 f"{self._hour_block(1, 14, req)}\n" \
+                 f"{self._hour_block(1, 16, req)}\n\n" \
+                 f"{weekend[1]}\n" \
+                 f"{self._hour_block(2, 10, req)}\n" \
+                 f"{self._hour_block(2, 12, req)}\n" \
+                 f"{self._hour_block(2, 14, req)}\n" \
+                 f"{self._hour_block(2, 16, req)}\n"
+        return answer
+
+    def __weekend_days(self):
+        weekday = self.__cur_date.isocalendar()
+        saturday = date.fromisocalendar(weekday[0], weekday[1], 6)
+        sunday = date.fromisocalendar(weekday[0], weekday[1], 7)
+        return saturday, sunday
 
     def __request_for_api(self, start_date, stop_date):
         req = f"https://api.open-meteo.com/v1/forecast?{self.__coord}&hourly=temperature_2m,windspeed_10m," \
