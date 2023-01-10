@@ -17,30 +17,51 @@ class Spots:
             data = json.loads(file.read())
         self.spots = data
 
-    def all_spots_names(self):
+    @staticmethod
+    def user_str_convert(func):
+        def wrapped(self, user, *args):
+            user = str(user)
+            return func(self, user, *args)
+        return wrapped
+
+    @user_str_convert
+    def all_spots_names(self, user):
         """
         Возвращает список мест, берет ключи из словаря (имена мест)
         """
-        return [spot for spot in self.spots]
+        if user in self.spots:
+            return [spot for spot in self.spots[user]]
+        return []
 
-    def spot_coord(self, spot):
+    @user_str_convert
+    def spot_coord(self, user, spot):
         """
         Принимает имя места, и если оно есть в списке self.spots возвращает его координаты
         """
-        if spot in self.spots:
-            return self.spots[spot]
+        if spot in self.spots[user]:
+            return self.spots[user][spot]
 
     def data_write(self):
         with open(self.json_file, "w", encoding="utf-8") as file:
             json.dump(self.spots, file, ensure_ascii=False)
 
-    def add_spot(self, spot_name, spot_coord):
-        spot_coord = f"latitude={spot_coord[:5]}&longitude={spot_coord[6:]}"
-        self.spots[spot_name] = spot_coord
+    @user_str_convert
+    def add_spot(self, user, spot_name, spot_coord):
+        if user not in self.spots:
+            self.spots[user] = {spot_name: spot_coord}
+        else:
+            self.spots[user][spot_name] = spot_coord
         self.data_write()
 
-    def del_spot(self, spot_name):
-        del self.spots[spot_name]
+    @user_str_convert
+    def del_spot(self, user, spot_name):
+        if user in self.spots:
+            if spot_name in self.spots[user]:
+                del self.spots[user][spot_name]
+            else:
+                raise ValueError
+        else:
+            raise ValueError
 
 
 class Weather:
