@@ -24,6 +24,12 @@ def cancel_option(func):
         if message.text == "Отмена":
             bot.clear_step_handler(message)
             return
+        if message.text in ["/weather", "/5_day_weather", "/weekend_weather"]:
+            return weather_init(message)
+        if message.text == "/add_spot":
+            return add_spot_init(message)
+        if message.text == "/del_spot":
+            return del_spot_init(message)
         return func(message, *args)
     return wrapped
 
@@ -46,7 +52,7 @@ def weather_info(message, weather_type):
     """
     Данная функция запрашивает погоду на текущий день и отправляет пользователю сформированное сообщение
     """
-    if message.text not in spots.all_spots_names(message.from_user.id):
+    if message.text not in spots.all_spots_names(message.from_user.id) and not message.location:
         bot.send_message(message.chat.id,
                          "Указанное место отсутствует",
                          reply_markup=spot_list_keyboard(spots.all_spots_names(message.from_user.id)))

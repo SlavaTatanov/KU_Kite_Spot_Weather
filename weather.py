@@ -58,6 +58,7 @@ class Spots:
         if user in self.spots:
             if spot_name in self.spots[user]:
                 del self.spots[user][spot_name]
+                self.data_write()
             else:
                 raise ValueError
         else:
