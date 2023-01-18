@@ -67,14 +67,14 @@ class Spots:
 
 class Weather:
     def __init__(self, coord, spot_name):
-        self.__coord = coord
-        self.__spot_name = spot_name
-        self.__cur_date = date.today()
+        self._coord = coord
+        self._spot_name = spot_name
+        self._cur_date = date.today()
 
     def weather(self):
-        req = self.__request_for_api(self.__cur_date, self.__cur_date)
-        answer = f"Погода {self.__spot_name}\n" \
-                 f"{self.__cur_date}" \
+        req = self._request_for_api(self._cur_date, self._cur_date)
+        answer = f"Погода {self._spot_name}\n" \
+                 f"{self._cur_date}" \
                  f"\n\n" \
                  f"Сейчас:\n" \
                  f"Температура: {req['current_weather']['temperature']}°C\n" \
@@ -104,9 +104,9 @@ class Weather:
         Возвращает:
         str: Прогноз погоды на 5 дней
         """
-        start_date = self.__cur_date + timedelta(days=1)
-        req = self.__request_for_api(start_date, self.__cur_date + timedelta(days=6))
-        answer = f"Погода на 5 дней {self.__spot_name}\n\n" \
+        start_date = self._cur_date + timedelta(days=1)
+        req = self._request_for_api(start_date, self._cur_date + timedelta(days=6))
+        answer = f"Погода на 5 дней {self._spot_name}\n\n" \
                  f"{start_date}\n\n" \
                  f"{self._hour_block(1, 11, req)}\n" \
                  f"{self._hour_block(1, 15, req)}\n\n" \
@@ -125,9 +125,9 @@ class Weather:
         return answer
 
     def weekend_weather(self):
-        weekend = self.__weekend_days()
-        req = self.__request_for_api(weekend[0], weekend[1])
-        answer = f"Погода на выходные {self.__spot_name}\n\n" \
+        weekend = self._weekend_days()
+        req = self._request_for_api(weekend[0], weekend[1])
+        answer = f"Погода на выходные {self._spot_name}\n\n" \
                  f"{weekend[0]}\n" \
                  f"{self._hour_block(1, 10, req)}\n" \
                  f"{self._hour_block(1, 12, req)}\n" \
@@ -140,14 +140,14 @@ class Weather:
                  f"{self._hour_block(2, 16, req)}\n"
         return answer
 
-    def __weekend_days(self):
-        weekday = self.__cur_date.isocalendar()
+    def _weekend_days(self):
+        weekday = self._cur_date.isocalendar()
         saturday = date.fromisocalendar(weekday[0], weekday[1], 6)
         sunday = date.fromisocalendar(weekday[0], weekday[1], 7)
         return saturday, sunday
 
-    def __request_for_api(self, start_date, stop_date):
-        req = f"https://api.open-meteo.com/v1/forecast?{self.__coord}&hourly=temperature_2m,windspeed_10m," \
+    def _request_for_api(self, start_date, stop_date):
+        req = f"https://api.open-meteo.com/v1/forecast?{self._coord}&hourly=temperature_2m,windspeed_10m," \
               f"windgusts_10m,winddirection_10m&windspeed_unit=ms" \
               f"&timezone=auto&start_date={start_date}&end_date={stop_date}" \
               f"&current_weather=true"
@@ -155,20 +155,20 @@ class Weather:
         answer = json.loads(answer.text)
         return answer
 
-    def __wind_request_for_hour(self, day, hour, req):
-        index = self.__get_index(day, hour)
+    def _wind_request_for_hour(self, day, hour, req):
+        index = self._get_index(day, hour)
         return Wind(req['hourly']['windspeed_10m'][index],
                     req['hourly']['winddirection_10m'][index],
                     req['hourly']['windgusts_10m'][index])
 
     def _hour_block(self, day, hour, req):
         return f"{hour}:00\n" \
-                 f"Температура: {req['hourly']['temperature_2m'][self.__get_index(day, hour)]}°C\n" \
-                 f"Ветер: {self.__wind_request_for_hour(day, hour, req)}\n" \
+                 f"Температура: {req['hourly']['temperature_2m'][self._get_index(day, hour)]}°C\n" \
+                 f"Ветер: {self._wind_request_for_hour(day, hour, req)}\n" \
 
 
     @staticmethod
-    def __get_index(day, hour):
+    def _get_index(day, hour):
         """
         Функция возвращает индекс, соответствующий указанному дню и часу.
 
