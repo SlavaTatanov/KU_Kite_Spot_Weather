@@ -141,9 +141,9 @@ class Weather:
         return answer
 
     def _weekend_days(self):
-        weekday = self._cur_date.isocalendar()
-        saturday = date.fromisocalendar(weekday[0], weekday[1], 6)
-        sunday = date.fromisocalendar(weekday[0], weekday[1], 7)
+        year, week, _ = self._cur_date.isocalendar()
+        saturday = date.fromisocalendar(year, week, 6)
+        sunday = date.fromisocalendar(year, week, 7)
         return saturday, sunday
 
     def _request_for_api(self, start_date, stop_date):

@@ -22,5 +22,4 @@ class TestWind(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    obj = weather.Wind(12, 12, 2)
     unittest.main()
